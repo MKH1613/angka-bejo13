@@ -355,11 +355,11 @@
                 // Simplified prompt for a faster, direct response
                 const prompt = `Analisis data historis ini: ${JSON.stringify(numbers)}. Berdasarkan pola angka dan warna, berikan 6 angka prediksi berikutnya. JAWAB HANYA dengan 6 angka yang dipisahkan koma, tanpa teks atau penjelasan lain. Contoh: 4, 8, 11, 2, 5, 1`;
 
-                const apiKey = "AIzaSyAhXBkLQX5hY9__jSrgqxXbcUFflxm74Uc";
+                const apiKey = "AIzaSyDmre36Jr3KT5TDGNzdM6Axfij5rljg1Vw";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
 
                 try {
                     const response = await fetch(apiUrl, {
@@ -397,7 +397,7 @@
                     clearTimeout(timeoutId);
                     if (error.name === 'AbortError') {
                         console.error("Gemini API call timed out.");
-                        modalContent.innerHTML = '<p class="text-red-500">Analisis terlalu lama (lebih dari 5 detik). Coba lagi atau tambahkan lebih banyak data.</p>';
+                        modalContent.innerHTML = '<p class="text-red-500">Analisis terlalu lama (lebih dari 10 detik). Coba lagi atau tambahkan lebih banyak data.</p>';
                     } else {
                         console.error("Gemini API call failed:", error);
                         modalContent.innerHTML = '<p class="text-red-500">Gagal mendapatkan analisis. Pastikan koneksi internet stabil.</p>';
@@ -422,4 +422,3 @@
 
 </body>
 </html>
-
