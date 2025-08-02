@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#4a90e2"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pencatat Angka">
+    <meta name="application-name" content="Pencatat Angka">
+    
+    <title>Aplikasi Pencatat & Prediksi Angka</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/manifest+json,{
+        &quot;name&quot;: &quot;Pencatat & Prediksi Angka&quot;,
+        &quot;short_name&quot;: &quot;Pencatat&quot;,
+        &quot;start_url&quot;: &quot;.&quot;,
+        &quot;display&quot;: &quot;standalone&quot;,
+        &quot;background_color&quot;: &quot;#f1f5f9&quot;,
+        &quot;theme_color&quot;: &quot;#4a90e2&quot;,
+        &quot;description&quot;: &quot;Aplikasi untuk mencatat dan memprediksi angka dengan analisis AI.&quot;,
+        &quot;icons&quot;: [
+            {
+                &quot;src&quot;: &quot;https://placehold.co/192x192/4a90e2/ffffff?text=PN&quot;,
+                &quot;sizes&quot;: &quot;192x192&quot;,
+                &quot;type&quot;: &quot;image/png&quot;
+            },
+            {
+                &quot;src&quot;: &quot;https://placehold.co/512x512/4a90e2/ffffff?text=PN&quot;,
+                &quot;sizes&quot;: &quot;512x512&quot;,
+                &quot;type&quot;: &quot;image/png&quot;
+            }
+        ]
+    }">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        /* Spinner for loading animation */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen py-8">
+
+    <div class="w-full max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-6">Pencatat & Prediksi Angka</h1>
+
+        <!-- Input Form -->
+        <div class="flex flex-col sm:flex-row items-center gap-3 mb-4">
+            <input type="number" id="numberInput" min="0" max="12" placeholder="Masukkan angka (0-12)" class="w-full flex-grow px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <button id="addButton" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+                Tambah
+            </button>
+        </div>
+
+        <!-- Data Display -->
+        <div class="bg-gray-50 rounded-lg p-4 h-48 overflow-y-auto border border-gray-200 mb-4">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">Data Tercatat:</h2>
+            <ul id="dataList" class="space-y-2">
+                 <p id="placeholder" class="text-gray-500 text-center pt-4">Belum ada data yang dimasukkan.</p>
+            </ul>
+        </div>
+
+        <!-- Prediction Box -->
+        <div id="predictionBox" class="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-4 mb-6 min-h-[150px]">
+             <h3 id="predictionTitle" class="text-lg font-semibold text-blue-800 mb-2">Prediksi Pola Angka</h3>
+             <div id="predictionOutput" class="flex flex-col justify-center">
+                 <span class="text-gray-500 text-base font-normal text-center">Masukkan data untuk melihat prediksi.</span>
+             </div>
+        </div>
+        
+        <!-- Action Buttons & Upload -->
+        <div class="flex flex-col gap-4">
+             <button id="geminiAnalyzeButton" class="w-full flex items-center justify-center bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed">
+                <span class="mr-2">✨</span> Analisis & Prediksi Cepat
+            </button>
+            
+            <!-- File Upload Section -->
+            <div class="pt-4 border-t border-gray-200">
+                <label for="csvFileInput" class="block text-sm font-medium text-gray-700 mb-2">Unggah Data dari File (.csv):</label>
+                <div class="flex flex-col sm:flex-row items-center gap-3">
+                    <input type="file" id="csvFileInput" accept=".csv" class="w-full flex-grow text-sm text-gray-500 border rounded-lg cursor-pointer focus:outline-none file:cursor-pointer file:border-0 file:bg-gray-100 file:mr-4 file:py-2 file:px-4">
+                    <button id="uploadButton" class="w-full sm:w-auto bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                        Unggah
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="downloadButton" class="w-full flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    Unduh Excel (.csv)
+                </button>
+                <button id="clearButton" class="w-full flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    Hapus Semua
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gemini Analysis Modal -->
+    <div id="analysisModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Prediksi Cerdas</h2>
+                <button id="closeModalButton" class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+            </div>
+            <div id="modalContent" class="min-h-[100px] flex items-center justify-center text-center" style="white-space: pre-wrap;">
+                <!-- Loading spinner or analysis text will go here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'angka-predictor-cache-v8';
+                const urlsToCache = ['/', 'https://cdn.tailwindcss.com', 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'];
+                self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(urlsToCache))));
+                self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+            `;
+            const swBlob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(swBlob);
+            navigator.serviceWorker.register(swUrl).then(reg => console.log('SW registered!', reg)).catch(err => console.log('SW registration failed: ', err));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const numberInput = document.getElementById('numberInput');
+            const addButton = document.getElementById('addButton');
+            const downloadButton = document.getElementById('downloadButton');
+            const clearButton = document.getElementById('clearButton');
+            const dataList = document.getElementById('dataList');
+            const placeholder = document.getElementById('placeholder');
+            const predictionTitle = document.getElementById('predictionTitle');
+            const predictionOutput = document.getElementById('predictionOutput');
+            const geminiAnalyzeButton = document.getElementById('geminiAnalyzeButton');
+            const analysisModal = document.getElementById('analysisModal');
+            const closeModalButton = document.getElementById('closeModalButton');
+            const modalContent = document.getElementById('modalContent');
+            const csvFileInput = document.getElementById('csvFileInput');
+            const uploadButton = document.getElementById('uploadButton');
+
+            // Data storage
+            let numbers = JSON.parse(localStorage.getItem('savedNumbers')) || [];
+
+            // --- Functions ---
+            function getColorInfo(num) {
+                const redNumbers = [1, 2, 6, 8, 9, 11];
+                if (num === 0) return { colorClass: 'text-green-600', colorName: 'Hijau' };
+                if (redNumbers.includes(num)) return { colorClass: 'text-red-600', colorName: 'Merah' };
+                return { colorClass: 'text-gray-800', colorName: 'Hitam' };
+            }
+
+            function saveData() {
+                localStorage.setItem('savedNumbers', JSON.stringify(numbers));
+            }
+
+            function renderData() {
+                dataList.innerHTML = '';
+                if (numbers.length === 0) {
+                    dataList.appendChild(placeholder);
+                    placeholder.style.display = 'block';
+                } else {
+                    placeholder.style.display = 'none';
+                    // Loop through numbers array to display them
+                    numbers.forEach((num, index) => {
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between items-center p-2 rounded-md bg-white shadow-sm border border-gray-200';
+                        
+                        // Create span for the number
+                        const numberSpan = document.createElement('span');
+                        numberSpan.textContent = num;
+                        numberSpan.className = `font-bold text-lg ${getColorInfo(num).colorClass}`;
+                        
+                        // Create delete button for each entry
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Hapus';
+                        deleteButton.className = 'text-xs bg-red-100 text-red-700 hover:bg-red-200 px-2 py-1 rounded-md';
+                        deleteButton.onclick = function() {
+                            deleteSingleNumber(index);
+                        };
+
+                        li.appendChild(numberSpan);
+                        li.appendChild(deleteButton);
+                        dataList.appendChild(li);
+                    });
+                }
+                updateButtonStates();
+                updatePrediction();
+                saveData();
+            }
+            
+            function updatePrediction() {
+                if (numbers.length < 2) {
+                    predictionTitle.textContent = 'Prediksi Pola Angka';
+                    predictionOutput.innerHTML = '<span class="text-gray-500 text-base font-normal text-center">Butuh lebih banyak data untuk prediksi pola.</span>';
+                    return;
+                }
+                const lastNumber = numbers[numbers.length - 1];
+                const nextNumbers = [];
+                for (let i = 0; i < numbers.length - 1; i++) {
+                    if (numbers[i] === lastNumber) {
+                        nextNumbers.push(numbers[i + 1]);
+                    }
+                }
+                predictionTitle.textContent = `Pola Setelah Angka ${lastNumber}`;
+                if (nextNumbers.length === 0) {
+                    predictionOutput.innerHTML = `<span class="text-gray-500 text-base font-normal text-center">Belum ada pola ditemukan setelah angka ${lastNumber}.</span>`;
+                    return;
+                }
+                const totalNextNumbers = nextNumbers.length;
+                const frequency = nextNumbers.reduce((acc, curr) => ({ ...acc, [curr]: (acc[curr] || 0) + 1 }), {});
+                const sortedFrequencies = Object.entries(frequency)
+                    .map(([num, count]) => ({ number: parseInt(num), count }))
+                    .sort((a, b) => b.count - a.count)
+                    .slice(0, 6);
+                predictionOutput.innerHTML = '';
+                const container = document.createElement('div');
+                container.className = 'flex flex-col space-y-1';
+                sortedFrequencies.forEach(pred => {
+                    const percentage = ((pred.count / totalNextNumbers) * 100).toFixed(1);
+                    const { colorClass } = getColorInfo(pred.number);
+                    const predictionItem = document.createElement('div');
+                    predictionItem.className = 'flex justify-between items-center text-lg';
+                    const numberSpan = document.createElement('span');
+                    numberSpan.textContent = `Angka ${pred.number}:`;
+                    numberSpan.className = `font-bold ${colorClass}`;
+                    const percentageSpan = document.createElement('span');
+                    percentageSpan.textContent = `${percentage}%`;
+                    percentageSpan.className = 'font-medium text-gray-700';
+                    predictionItem.appendChild(numberSpan);
+                    predictionItem.appendChild(percentageSpan);
+                    container.appendChild(predictionItem);
+                });
+                predictionOutput.appendChild(container);
+            }
+
+            function updateButtonStates() {
+                const hasData = numbers.length > 0;
+                downloadButton.disabled = !hasData;
+                clearButton.disabled = !hasData;
+                geminiAnalyzeButton.disabled = numbers.length < 10;
+            }
+
+            function addNumber() {
+                const value = numberInput.value;
+                if (value === '') {
+                    const inputEl = document.getElementById('numberInput');
+                    inputEl.classList.add('border-red-500', 'ring-red-500');
+                    inputEl.placeholder = 'Angka tidak boleh kosong!';
+                    setTimeout(() => {
+                        inputEl.classList.remove('border-red-500', 'ring-red-500');
+                        inputEl.placeholder = 'Masukkan angka (0-12)';
+                    }, 2000);
+                    return;
+                }
+                const num = parseInt(value, 10);
+                if (isNaN(num) || num < 0 || num > 12) {
+                    alert('Harap masukkan angka antara 0 dan 12.');
+                    numberInput.value = '';
+                    numberInput.focus();
+                    return;
+                }
+                numbers.push(num);
+                numberInput.value = '';
+                renderData();
+                numberInput.focus();
+            }
+
+            function downloadCSV() {
+                if (numbers.length === 0) { alert('Tidak ada data untuk diunduh.'); return; }
+                let csvContent = "data:text/csv;charset=utf-8,Angka,Warna\n";
+                numbers.forEach(num => { csvContent += `${num},${getColorInfo(num).colorName}\n`; });
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "data_angka_dengan_warna.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            // New function to delete a single number
+            function deleteSingleNumber(index) {
+                numbers.splice(index, 1); // Remove the number at the specified index
+                renderData(); // Re-render the list and update everything
+            }
+
+            function clearAllData() {
+                if (confirm('Apakah Anda yakin ingin menghapus semua data?')) {
+                    numbers = [];
+                    renderData();
+                }
+            }
+
+            function handleFileUpload() {
+                const file = csvFileInput.files[0];
+                if (!file) {
+                    alert('Silakan pilih file .csv terlebih dahulu.');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const csv = event.target.result;
+                    const lines = csv.split('\n').filter(line => line.trim() !== '');
+                    let importedCount = 0;
+                    let skippedCount = 0;
+                    lines.forEach((line, index) => {
+                        if (index === 0 && isNaN(parseInt(line.split(',')[0]))) return;
+                        const value = line.split(',')[0].trim();
+                        const num = parseInt(value);
+                        if (!isNaN(num) && num >= 0 && num <= 12) {
+                            numbers.push(num);
+                            importedCount++;
+                        } else {
+                            skippedCount++;
+                        }
+                    });
+                    renderData();
+                    alert(`${importedCount} data berhasil diimpor. ${skippedCount} data tidak valid dilewati.`);
+                    csvFileInput.value = '';
+                };
+                reader.onerror = function() { alert('Gagal membaca file.'); };
+                reader.readAsText(file);
+            }
+            
+            // --- Gemini API Functions (Updated for Speed and Simplicity) ---
+            async function getGeminiAnalysis() {
+                modalContent.innerHTML = '<div class="spinner"></div>';
+                analysisModal.classList.remove('hidden');
+
+                // Simplified prompt for a faster, direct response
+                const prompt = `Analisis data historis ini: ${JSON.stringify(numbers)}. Berdasarkan pola angka dan warna, berikan 6 angka prediksi berikutnya. JAWAB HANYA dengan 6 angka yang dipisahkan koma, tanpa teks atau penjelasan lain. Contoh: 4, 8, 11, 2, 5, 1`;
+
+                const apiKey = "AIzaSyAhXBkLQX5hY9__jSrgqxXbcUFflxm74Uc";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+
+                    const result = await response.json();
+                    const predictionText = result.candidates[0].content.parts[0].text;
+                    
+                    // Parse the comma-separated numbers and display them
+                    const predictedNumbers = predictionText.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+                    
+                    modalContent.innerHTML = ''; // Clear spinner
+                    const container = document.createElement('div');
+                    container.className = 'flex flex-wrap justify-center items-center gap-4';
+
+                    predictedNumbers.forEach(num => {
+                        const { colorClass } = getColorInfo(num);
+                        const numberSpan = document.createElement('span');
+                        numberSpan.textContent = num;
+                        numberSpan.className = `font-bold text-4xl p-2 rounded-lg ${colorClass}`;
+                        container.appendChild(numberSpan);
+                    });
+                    
+                    modalContent.appendChild(container);
+
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    if (error.name === 'AbortError') {
+                        console.error("Gemini API call timed out.");
+                        modalContent.innerHTML = '<p class="text-red-500">Analisis terlalu lama (lebih dari 5 detik). Coba lagi atau tambahkan lebih banyak data.</p>';
+                    } else {
+                        console.error("Gemini API call failed:", error);
+                        modalContent.innerHTML = '<p class="text-red-500">Gagal mendapatkan analisis. Pastikan koneksi internet stabil.</p>';
+                    }
+                }
+            }
+
+            // --- Event Listeners ---
+            addButton.addEventListener('click', addNumber);
+            numberInput.addEventListener('keydown', e => { if (e.key === 'Enter') addNumber(); });
+            downloadButton.addEventListener('click', downloadCSV);
+            clearButton.addEventListener('click', clearAllData); // Changed to clearAllData
+            geminiAnalyzeButton.addEventListener('click', getGeminiAnalysis);
+            closeModalButton.addEventListener('click', () => analysisModal.classList.add('hidden'));
+            analysisModal.addEventListener('click', (e) => { if (e.target === analysisModal) analysisModal.classList.add('hidden'); });
+            uploadButton.addEventListener('click', handleFileUpload);
+            
+            // Initial render on load
+            renderData();
+        });
+    </script>
+
+</body>
+</html>
